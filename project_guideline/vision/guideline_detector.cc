@@ -70,29 +70,47 @@ std::unique_ptr<std::string> FileTocToString(const EmbeddedFileToc& toc) {
 }
 
 void ConfigureSegmenter(ImageSegmenterOptions& segmenter_options,
-                        std::unique_ptr<std::string> model) {
-  segmenter_options.base_options.delegate =
-      BaseOptions::Delegate::EDGETPU_NNAPI;
+                        std::unique_ptr<std::string> model,
+                        BaseOptions::Delegate delegate) {
+  segmenter_options.base_options.delegate = delegate;
   segmenter_options.base_options.model_asset_buffer = std::move(model);
+}
+
+absl::StatusOr<std::unique_ptr<ImageSegmenter>> CreateSegmenterWithFallback(
+    const EmbeddedFileToc& model) {
+  auto nnapi_options = std::make_unique<ImageSegmenterOptions>();
+  ConfigureSegmenter(*nnapi_options, FileTocToString(model),
+                     BaseOptions::Delegate::EDGETPU_NNAPI);
+  auto nnapi_segmenter = ImageSegmenter::Create(std::move(nnapi_options));
+  if (nnapi_segmenter.ok()) {
+    return std::move(nnapi_segmenter).value();
+  }
+
+  LOG(WARNING) << "NNAPI/EdgeTPU delegate unavailable, trying GPU: "
+               << nnapi_segmenter.status();
+  auto gpu_options = std::make_unique<ImageSegmenterOptions>();
+  ConfigureSegmenter(*gpu_options, FileTocToString(model),
+                     BaseOptions::Delegate::GPU);
+  auto gpu_segmenter = ImageSegmenter::Create(std::move(gpu_options));
+  if (gpu_segmenter.ok()) {
+    return std::move(gpu_segmenter).value();
+  }
+
+  LOG(WARNING) << "GPU delegate unavailable, falling back to CPU: "
+               << gpu_segmenter.status();
+  auto cpu_options = std::make_unique<ImageSegmenterOptions>();
+  ConfigureSegmenter(*cpu_options, FileTocToString(model),
+                     BaseOptions::Delegate::CPU);
+  return ImageSegmenter::Create(std::move(cpu_options));
 }
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<GuidelineDetector>> GuidelineDetector::Create(
     const GuidelineEngineConfig_DetectorOptions& options) {
-  auto depth_segmenter_options = std::make_unique<ImageSegmenterOptions>();
-  ConfigureSegmenter(*depth_segmenter_options,
-                     FileTocToString(depth_tflite_embed_create()[0]));
-  GL_ASSIGN_OR_RETURN(
-      auto depth_segmenter,
-      ImageSegmenter::Create(std::move(depth_segmenter_options)));
-
-  auto guideline_segmenter_options = std::make_unique<ImageSegmenterOptions>();
-  ConfigureSegmenter(*guideline_segmenter_options,
-                     FileTocToString(guideline_tflite_embed_create()[0]));
-
-  GL_ASSIGN_OR_RETURN(
-      auto guideline_segmenter,
-      ImageSegmenter::Create(std::move(guideline_segmenter_options)));
+  GL_ASSIGN_OR_RETURN(auto depth_segmenter,
+                      CreateSegmenterWithFallback(depth_tflite_embed_create()[0]));
+  GL_ASSIGN_OR_RETURN(auto guideline_segmenter, CreateSegmenterWithFallback(
+                                                 guideline_tflite_embed_create()[0]));
 
   return absl::WrapUnique(new GuidelineDetector(
       options, std::move(depth_segmenter), std::move(guideline_segmenter)));
