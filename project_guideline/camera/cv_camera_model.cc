@@ -41,12 +41,12 @@ bool CvCameraModel::PointToPixel(const Eigen::Vector3d& camera_t_point,
     return false;
   }
   cv::Mat camera_t_point_mat(1, 1, CV_64FC3, (void*)camera_t_point.data());
-  cv::Mat2d image_points;
+  cv::Mat image_points;
   // Project the point in camera coordinate frame to image pixel.
   cv::projectPoints(camera_t_point_mat, /*rvec=*/kZeroVec3Mat,
                     /*tvec=*/kZeroVec3Mat, intrinsic_matrix_mat_,
                     distortion_coeffs_mat_, image_points);
-  pixel << image_points(0, 0)[0], image_points(0, 0)[1];
+  pixel << image_points.at<cv::Vec2d>(0, 0)[0], image_points.at<cv::Vec2d>(0, 0)[1];
   return pixel.allFinite();
 }
 
