@@ -17,6 +17,7 @@
 -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black"
@@ -36,8 +37,6 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       app:cardCornerRadius="24dp"
-      app:cardStrokeColor="#FFB6C1"
-      app:cardStrokeWidth="3dp"
       app:cardBackgroundColor="@android:color/transparent"
       android:layout_marginBottom="48dp">
 
