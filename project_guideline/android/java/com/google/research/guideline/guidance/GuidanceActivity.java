@@ -16,6 +16,7 @@ package com.google.research.guideline.guidance;
 
 import android.Manifest;
 import android.os.Bundle;
+import android.view.View;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.research.guideline.inject.Qualifiers.GuidanceFragment;
@@ -38,8 +39,12 @@ public final class GuidanceActivity extends Hilt_GuidanceActivity {
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    setContentView(R.layout.start_layout);
     immersiveModeController.enableImmersiveMode();
-    permissionsHelper.checkRequiredPermissions(this, REQUIRED_PERMISSIONS, this::createFragment);
+
+    findViewById(R.id.start_button).setOnClickListener(v -> {
+      permissionsHelper.checkRequiredPermissions(this, REQUIRED_PERMISSIONS, this::createFragment);
+    });
   }
 
   private void createFragment() {
