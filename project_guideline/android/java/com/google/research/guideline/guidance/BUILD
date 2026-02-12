@@ -33,6 +33,7 @@ android_library(
         "//project_guideline/android/java/com/google/research/guideline/util/ui",
         "//third_party/hilt:android_entry_point",
         "@maven//:androidx_appcompat_appcompat",
+        "@maven//:androidx_cardview_cardview",
         "@maven//:androidx_fragment_fragment",
         "@maven//:com_google_code_findbugs_jsr305",
         "@maven//:javax_inject_javax_inject",
