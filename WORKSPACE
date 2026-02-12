@@ -143,6 +143,7 @@ maven_install(
         "com.google.truth:truth:1.1.3",
         "javax.annotation:javax.annotation-api:1.3.2",
         "androidx.annotation:annotation:1.5.0",
+        "androidx.cardview:cardview:1.0.0",
         "com.google.dagger:hilt-android:2.46",
         "com.google.dagger:hilt-android-testing:2.46",
         "com.google.dagger:hilt-android-compiler:2.46",
